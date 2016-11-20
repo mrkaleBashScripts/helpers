@@ -1,0 +1,65 @@
+#
+# This script is called as a last part of the user's login
+# procedure within the file .profile
+# 
+
+#
+#  System
+#
+echo
+cat /etc/os-release | grep PRETTY_NAME
+# Show possible distribution versions
+[ -f /etc/debian_version ] && echo "Debian: $(cat /etc/debian_version)"
+[ -f /etc/pipaos_version ] && echo "PipaOS: $(cat /etc/pipaos_version)"
+[ -f /etc/pibang-release ] && echo "PiBang: $(cat /etc/pibang-release)"
+
+# Uptime and users
+echo
+w
+
+# Operational parameters
+echo
+echo -e "Current temperature = \e[35m"$(awk '{printf "%3.1f°C\n", $1/1000}' /sys/class/thermal/thermal_zone0/temp)"\e[0m"
+echo -e "Current frequency   = \e[36m"$(sudo awk '{printf "%3.0f MHz\n", $1/1000}' /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_cur_freq)"\e[0m"
+UPtime=$(cat /proc/uptime)
+echo -e "Last boot           = \e[33m"$(date -d @$(( $(date +%s) - ${UPtime%%.*} )) +"%d.%m.%Y %H:%M")"\e[0m"
+echo -e "IP address          = \e[32m"$(hostname -I)"\e[0m"
+
+#
+# SSH Key
+printf "SSH Key Fingerprint = "
+if [ -f "$HOME/.ssh/id_rsa.pub" ]; then
+	echo $(ssh-keygen -l -f $HOME/.ssh/id_rsa.pub)
+else
+	echo "n/a"
+fi
+
+#
+# Show technical parameters of the SD card
+pushd $(pwd) >/dev/null
+cd /sys/class/mmc_host/mmc?/mmc?:*
+echo "SD Card             = man:$(cat manfid), oem:$(cat oemid), name:$(cat name), hwrev:$(cat hwrev), fwrev:$(cat fwrev), date:$(cat date)"
+popd >/dev/null
+
+#
+# Intefaces
+echo
+/sbin/ifconfig | grep HWaddr
+
+#
+# Disk usage without temporary and external partitions
+#
+echo
+df -h -l -T --total -x tmpfs -x udev -x rootfs
+
+#
+# Partitions
+#
+sudo fdisk -l
+echo
+
+#
+# Export useful variables
+#
+export backupdir=/mnt/usb/backup/sdcard
+
