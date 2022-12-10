@@ -17,4 +17,4 @@
 # (at your option) any later version.
 #
 cat /tmp/*.inf
-check_temp -S
+sudo check_temp -S
